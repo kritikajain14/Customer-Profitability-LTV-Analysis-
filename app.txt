@@ -1,0 +1,896 @@
+import React, { useEffect, useState } from "react";
+
+/* -----------------------------------------------------------
+   Scroll-reveal: adds "is-visible" once an element enters view
+------------------------------------------------------------ */
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll(".reveal, .ltv-tab");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
+
+/* -----------------------------------------------------------
+   Content — GlowNest is a fictional D2C skincare brand and every
+   record in this dataset is synthetically generated (no real
+   customer or company data). That's called out explicitly in the
+   hero and footer so a reviewer never has to wonder.
+------------------------------------------------------------ */
+const METHOD_STEPS = [
+  { num: "01", title: "Data Prep", body: "Generated & structured 10,000 synthetic customer records across 4 Excel sheets for Power BI ingestion." },
+  { num: "02", title: "EDA", body: "Explored LTV, CAC, order count and discount distributions per acquisition channel in Python." },
+  { num: "03", title: "KPI Design", body: "Defined Net LTV = Revenue − Discounts − CAC as a DAX calculated column, not just a revenue total." },
+  { num: "04", title: "Dashboard", body: "Built a 5-page Power BI report: overview, channel LTV, retention, channel performance, segment mix." },
+  { num: "05", title: "Segmentation", body: "Tagged every customer: True Loyalist, Occasional, Discount Hunter, or One-Timer." },
+];
+
+const KEY_METRICS = [
+  { label: "Best channel LTV", value: "₹4,187", sub: "Organic" },
+  { label: "Worst channel LTV", value: "₹741", sub: "Coupon site" },
+  { label: "LTV gap, best vs. worst", value: "5.6×", sub: "Organic vs. coupon site" },
+  { label: "True Loyalists", value: "57.3%", sub: "5,730 of 10,000 customers" },
+  { label: "True Loyalist avg LTV", value: "₹3,599", sub: "95% from 4 channels" },
+  { label: "Instagram LTV : CAC", value: "2.2×", sub: "₹2,628 vs ₹1,203" },
+];
+
+const QUICK_LINKS = [
+  { href: "#problem", label: "Business Question" },
+  { href: "#deep-dive", label: "Deep-Dive Analysis" },
+  { href: "#dashboard", label: "Power BI Dashboard" },
+  { href: "#ab-test", label: "A/B Test" },
+  { href: "#insights", label: "Key Insights" },
+  { href: "#recommendations", label: "Recommendations" },
+  { href: "#projects", label: "Project Links" },
+];
+
+const TABS = ["Objective", "My Analysis", "Methodology", "Key Result"];
+
+const ANALYSIS_DONE = [
+  { title: "Exploratory data analysis", body: "Explored the distribution of revenue, CAC, discounts and order count per channel to spot outliers and skew before calculating anything." },
+  { title: "Net LTV modeling", body: "Designed and built Net LTV (Revenue − Discounts − CAC) as a DAX calculated column, so every chart reflects profit, not raw revenue." },
+  { title: "Customer segmentation", body: "Wrote rule-based logic to tag every customer as a True Loyalist, Occasional, Discount Hunter or One-Timer based on order frequency and discount usage." },
+  { title: "Cohort retention analysis", body: "Tracked month-over-month retention per channel (Month 0 → Month 6) to find exactly where each channel's customers drop off." },
+  { title: "Channel comparison", body: "Compared all five channels side by side on LTV, CAC, discount cost and retention to rank them by true profitability, not volume." },
+];
+
+const AB_TEST = {
+  status: "Suggested experiment — not yet run",
+  hypothesis: "Suppressing the discount pop-up for returning customers (instead of showing it to everyone) will reduce discount leakage without hurting repeat-purchase rate.",
+  control: { label: "Control", desc: "Returning customers still see the standard discount pop-up", metric: "Repeat purchase rate", value: "—" },
+  variant: { label: "Variant B", desc: "Returning customers see a loyalty message instead of a discount code", metric: "Repeat purchase rate", value: "—" },
+};
+
+const DASHBOARD_FIGURES = [
+  {
+    label: "LTV by acquisition channel",
+    caption: "Fig 1 — Overview page",
+    explain: "A bar chart ranking all 5 channels by average Net LTV, highest to lowest. It's the fastest way to see the headline finding — organic and instagram sit far above coupon site, which is where the 5.6× gap comes from.",
+  },
+  {
+    label: "Revenue vs. Discounts vs. CAC",
+    caption: "Fig 2 — Channel performance",
+    explain: "A clustered bar chart breaking each channel's revenue apart into what it actually cost — CAC and discounts sit next to gross revenue. This is what shows coupon site looking fine on revenue alone, but weak once cost is subtracted.",
+  },
+  {
+    label: "Retention by month",
+    caption: "Fig 3 — Cohort retention, per channel",
+    explain: "A line chart tracking what % of each channel's customers are still active from Month 0 through Month 6. Coupon site's line collapses by Month 2; every other channel holds a much flatter curve.",
+  },
+  {
+    label: "Segment mix by channel",
+    caption: "Fig 4 — Segment distribution",
+    explain: "A stacked bar showing what share of each channel's customers are True Loyalists vs. Occasional vs. Discount Hunters vs. One-Timers. It's what proves segment quality — not just customer count — differs sharply by channel.",
+  },
+];
+
+const PROJECT_LINKS = [
+  { icon: "📓", label: "GitHub Repository", desc: "Full code — data prep, DAX measures, segmentation logic", href: "https://github.com/your-username/glownest-ltv-analysis" },
+  { icon: "📊", label: "Power BI Dashboard", desc: "The live 5-page report shown on this page", href: "https://app.powerbi.com/your-published-report-link" },
+  { icon: "📁", label: "Dataset (synthetic)", desc: "The 10,000-row synthetic customer dataset used in this analysis", href: "https://drive.google.com/your-dataset-folder" },
+  { icon: "📄", label: "Written Report", desc: "The full write-up this page is based on", href: "https://drive.google.com/your-report-link" },
+];
+
+const PROBLEM_POINTS = [
+  "Repeat purchase rate was climbing, but gross margin was quietly declining alongside it",
+  "Marketing spend was allocated by channel volume, not by what a channel's customers were actually worth over time",
+  "No one could say whether a customer acquired through a 30%+ discount was profitable, or just cheap to acquire and expensive to keep",
+  "There was no single number — like a Net LTV — that combined revenue, discounting and acquisition cost per channel",
+];
+
+const APPROACH_POINTS = [
+  "Generated a realistic synthetic dataset — 10,000 customers across 5 channels — since GlowNest is a fictional brand built for this case study",
+  "Modeled acquisition cost, discount rate, order history and churn behavior per channel so the data reflects real D2C patterns, not random noise",
+  "Calculated a Net LTV (Revenue − Discounts − CAC) as a DAX measure so every chart in the dashboard reflects profit, not just revenue",
+  "Segmented all 10,000 customers into behavioral tiers — True Loyalist, Occasional, Discount Hunter, One-Timer — to separate volume from value",
+  "Built a 5-page Power BI dashboard so the findings could be explored by channel, segment and month, not just read as a static report",
+];
+
+const DEEP_DIVE = [
+  {
+    tint: "bg-green-deep",
+    title: "High-LTV channels",
+    body: "Organic customers average ₹4,187 LTV on roughly ₹200 CAC — a 99.7% margin segment. Instagram returns 2.2× LTV-to-CAC and produces the largest volume of True Loyalists (1,817 customers).",
+  },
+  {
+    tint: "bg-green-bright",
+    title: "Churn & retention",
+    body: "Coupon-site customers fall to 23.6% retention by Month 1 and 10.9% by Month 2. Every other channel holds 40–70% retention through Month 3.",
+  },
+  {
+    tint: "bg-gold",
+    title: "Discount leakage",
+    body: "837 of 941 discount hunters (89%) came from the coupon site, averaging ₹478 in discounts each. Once CAC and discounts are netted out, this channel is worth ₹741 in LTV.",
+  },
+  {
+    tint: "bg-sage",
+    title: "Segment quality",
+    body: "57.3% of all customers are True Loyalists worth ₹3,599 avg LTV — but 95% of them are concentrated in just four channels: Instagram, Google, Organic and Referral.",
+  },
+];
+
+const INSIGHTS = [
+  { tag: "LTV", title: "Organic channel delivers 5.6× higher LTV than coupon site", body: "Organic customers average ₹4,187 LTV with only ~₹200 CAC — a 99.7% margin segment and the brand's highest-value cohort." },
+  { tag: "ROI", title: "Instagram delivers 2.2× LTV-to-CAC despite a higher acquisition cost", body: "Instagram LTV is ₹2,628 against ₹1,203 CAC. It drives the largest count of True Loyalists (1,817) — the highest-volume high-quality channel." },
+  { tag: "Churn", title: "Coupon-site customers are effectively gone by Month 2", body: "All other channels retain 40–70% at Month 3. Coupon site drops to 23.6% retention by Month 1 and nearly disappears by Month 2 (10.9%)." },
+  { tag: "Cost", title: "One channel produces 89% of all discount-driven customers", body: "837 of 941 total discount hunters came from the coupon site, averaging ₹478 in discounts each — a segment that's net-negative once CAC and discounts are factored into LTV (₹741 avg)." },
+  { tag: "Segment", title: "True Loyalists are 57.3% of customers, but only 4 channels produce them", body: "True Loyalists average ₹3,599 LTV. 95% of them came from Instagram, Google, Organic or Referral — channel quality, not volume, is the real driver of outcome." },
+];
+
+const IMPACT_POINTS = [
+  "Reframed discount-heavy acquisition (coupon site) as a margin risk, not a growth lever",
+  "Quantified the profitability gap: organic customers are worth 5.6× more than coupon-site customers once CAC and discounts are netted out",
+  "Turned three disconnected numbers — revenue, CAC, discounts — into one decision-ready metric (Net LTV) usable across any repeat-purchase business",
+  "Built the case for reallocating budget toward organic and referral, the two channels with the best unit economics in the dataset",
+];
+
+const RECOMMENDATIONS = [
+  { tag: "Cost reduction", title: "Cap coupon-site ad spend", body: "Saves an estimated ₹964K/yr in discount leakage across 2,017 customers." },
+  { tag: "Budget reallocation", title: "Reallocate budget to Instagram retargeting", body: "2.2× LTV:CAC with a proven 76.5% loyalist conversion rate." },
+  { tag: "Growth", title: "Launch a referral incentive program", body: "₹2,962 avg LTV on ₹347 CAC — 99% margin, near-zero discounting." },
+  { tag: "Retention", title: "Suppress discounts for returning buyers", body: "Discount hunters only buy when discounted; the coupon just subsidizes a customer who was going to be unprofitable anyway." },
+  { tag: "Long-term", title: "Invest in organic content (SEO / community)", body: "₹200 CAC against ₹4,187 LTV is the best unit economics of any channel in the dataset." },
+  { tag: "Retention", title: "Protect the True Loyalist segment", body: "5,730 customers at ₹3,599 avg LTV — a retention program here is the single highest-ROI move available." },
+];
+
+const TECH_STACK = [
+  { key: "frontend", val: "React, Vite, Tailwind" },
+  { key: "backend", val: "Node.js, Express, MongoDB" },
+  { key: "analytics", val: "Python, Pandas, DAX" },
+  { key: "reporting", val: "Power BI, Excel" },
+];
+
+/* -----------------------------------------------------------
+   Small building blocks
+------------------------------------------------------------ */
+function Pill({ children }) {
+  return (
+    <span className="font-mono text-xs px-3 py-1.5 rounded-full bg-butter/80 border border-green-deep/15 text-green-deep font-bold">
+      {children}
+    </span>
+  );
+}
+
+function SectionEyebrow({ children, boxed = false }) {
+  return (
+    <div
+      className={`flex items-center gap-2 font-mono text-xs tracking-widest uppercase mb-3 font-bold ${
+        boxed ? "text-green-mid" : "text-butter"
+      }`}
+    >
+      <span className="w-6 h-px bg-gold inline-block" />
+      {children}
+    </div>
+  );
+}
+
+function ImgPlaceholder({ label, icon = "📊" }) {
+  /* Swap this block for a real screenshot:
+     <img src="/images/your-file.png" alt="..." className="w-full h-full object-cover" /> */
+  return (
+    <div className="aspect-16/10 w-full rounded-xl border-2 border-dashed border-green-mid/50 bg-butter flex items-center justify-center text-center p-6 font-mono text-sm text-green-mid">
+      <div>
+        <span className="block text-2xl mb-2">{icon}</span>
+        {label}
+      </div>
+    </div>
+  );
+}
+
+/* Boxed image frame — keeps every screenshot at a fixed, predictable
+   aspect ratio so the grid stays aligned at every breakpoint. Drop a
+   real <img> in as the child to replace the dashed placeholder. */
+function ImageBox({ children }) {
+  return (
+    <div className="aspect-16/10 w-full rounded-xl border border-green-deep/15 bg-butter overflow-hidden shadow-sm">
+      {children}
+    </div>
+  );
+}
+
+/* Full-stack signature: a terminal-styled "stack.json" panel. Small,
+   quiet nod to the MERN background behind an analytics-only page. */
+function TerminalStack() {
+  return (
+    <div className="terminal w-full max-w-md">
+      <div className="terminal-bar">
+        <span className="terminal-dot" style={{ background: "#ff5f57" }} />
+        <span className="terminal-dot" style={{ background: "#febc2e" }} />
+        <span className="terminal-dot" style={{ background: "#28c840" }} />
+        <span className="ml-2 font-mono text-[11px] text-white/40">stack.json</span>
+      </div>
+      <pre>
+        <span className="tok-punc">{"{"}</span>{"\n"}
+        {TECH_STACK.map((row, i) => (
+          <React.Fragment key={row.key}>
+            {"  "}
+            <span className="tok-key">"{row.key}"</span>
+            <span className="tok-punc">: </span>
+            <span className="tok-str">"{row.val}"</span>
+            <span className="tok-punc">{i < TECH_STACK.length - 1 ? "," : ""}</span>
+            {"\n"}
+          </React.Fragment>
+        ))}
+        <span className="tok-punc">{"}"}</span>
+        <span className="cursor">&nbsp;</span>
+      </pre>
+    </div>
+  );
+}
+
+export default function App() {
+  useReveal();
+  const [activeTab, setActiveTab] = useState(TABS[0]);
+
+  return (
+    <div className="min-h-screen relative overflow-x-hidden">
+      {/* ambient backdrop — soft solid blurs, no gradients */}
+      <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
+        <div className="blob w-72 h-72 sm:w-96 sm:h-96 -top-24 -left-20 bg-butter/15" />
+        <div className="blob w-64 h-64 sm:w-80 sm:h-80 top-1/3 -right-24 bg-gold/20" style={{ animationDelay: "-8s" }} />
+        <div className="blob w-72 h-72 sm:w-md sm:h-112 -bottom-40 left-1/4 bg-butter/10" style={{ animationDelay: "-14s" }} />
+      </div>
+
+      {/* NAV — solid butter, high contrast against the green page */}
+      <nav className="sticky top-0 z-50 bg-butter border-b border-black/10 shadow-[0_8px_24px_-16px_rgba(1,38,34,0.6)]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 shrink-0 rounded-full bg-gold flex items-center justify-center text-green-deep font-display font-black text-sm">
+              GN
+            </div>
+            <div className="min-w-0">
+              <p className="font-display font-bold text-green-deep leading-tight text-sm sm:text-base truncate">
+                GlowNest · D2C LTV Analysis
+              </p>
+              <p className="hidden sm:block text-xs text-green-deep/60 font-mono">
+                Customer Profitability &amp; LTV Analysis
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <a
+              href="#dashboard"
+              className="px-3 sm:px-4 py-2 rounded-full bg-gold text-green-deep text-xs sm:text-sm font-bold hover:bg-gold-bright transition-colors"
+            >
+              Dashboard
+            </a>
+            <a
+              href="#recommendations"
+              className="hidden sm:inline-block px-4 py-2 rounded-full border border-green-deep/40 text-green-deep text-sm font-bold hover:bg-green-deep hover:text-butter transition-colors"
+            >
+              Recommendations
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
+        {/* HERO / EXECUTIVE SUMMARY */}
+        <section id="summary" className="pt-12 sm:pt-14 pb-10">
+          <div className="bg-butter border border-green-deep/10 rounded-3xl p-6 sm:p-9 reveal shadow-[0_20px_60px_-30px_rgba(1,62,55,0.35)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <SectionEyebrow boxed>Executive Summary</SectionEyebrow>
+              <Pill>10,000 synthetic customers · 5 channels</Pill>
+            </div>
+
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-green-deep leading-[1.05] mb-4">
+              Not all growth is profitable growth.
+            </h1>
+
+            <p className="text-green-mid leading-relaxed mb-2 max-w-2xl font-medium">
+              GlowNest is a fictional D2C skincare brand built for this case
+              study. It was acquiring customers across five channels without
+              knowing which ones were actually profitable — rising repeat
+              purchase rates were masking margin loss from heavy discounting.
+              This project analyzes 10,000{" "}
+              <span className="font-bold text-green-deep">synthetically generated</span>{" "}
+              customer records to find which channels create real profit,
+              where churn kills LTV, and what to do about both.
+            </p>
+            <p className="text-xs font-mono text-green-mid/70 mb-7">
+              All data in this project — customers, orders, revenue, CAC — is synthetic. No real company or customer data is used.
+            </p>
+
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-1 sm:gap-2 border-b border-green-deep/10 mb-6">
+              {TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3 sm:px-4 py-2.5 text-sm font-bold rounded-t-lg transition-colors ${
+                    activeTab === tab
+                      ? "text-green-deep border-b-2 border-gold"
+                      : "text-green-mid/70 hover:text-green-deep"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "Objective" && (
+              <p className="text-green-mid leading-relaxed">
+                Identify which of the five acquisition channels are genuinely
+                profitable once CAC and discounting are netted out of
+                revenue — then turn that into a concrete marketing budget
+                reallocation GlowNest could act on.
+              </p>
+            )}
+
+            {activeTab === "My Analysis" && (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {ANALYSIS_DONE.map((a) => (
+                  <div key={a.title} className="flex gap-3">
+                    <span className="text-gold font-black shrink-0">—</span>
+                    <div>
+                      <p className="font-display font-bold text-green-deep text-sm mb-0.5">{a.title}</p>
+                      <p className="text-sm text-green-mid leading-relaxed">{a.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "Methodology" && (
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                {METHOD_STEPS.map((s) => (
+                  <div key={s.num} className="bg-butter rounded-xl p-4 border border-green-deep/10">
+                    <span className="font-mono text-green-bright font-bold text-lg block mb-1">
+                      {s.num}
+                    </span>
+                    <p className="font-display font-bold text-green-deep text-sm mb-1">
+                      {s.title}
+                    </p>
+                    <p className="text-xs text-green-mid leading-snug">{s.body}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "Key Result" && (
+              <div className="ltv-tab">
+                <p className="font-display italic text-4xl sm:text-5xl font-black text-green-deep mb-1">
+                  5.6×
+                </p>
+                <p className="font-mono text-xs text-green-mid mb-5 font-bold">
+                  higher lifetime value — organic vs. coupon site
+                </p>
+                <div className="mb-4">
+                  <div className="flex justify-between font-mono text-xs text-green-deep mb-1.5 font-bold">
+                    <span>Organic</span>
+                    <span>₹4,187</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-green-deep/10 overflow-hidden">
+                    <div className="bar-fill bar-fill--organic" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between font-mono text-xs text-green-deep mb-1.5 font-bold">
+                    <span>Coupon site</span>
+                    <span>₹741</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-green-deep/10 overflow-hidden">
+                    <div className="bar-fill bar-fill--low bar-fill--coupon" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* QUICK LINKS — same boxed-green treatment as Key Metrics below */}
+        <section className="pb-10">
+          <p className="font-mono text-xs uppercase tracking-widest text-butter mb-3 font-bold reveal">
+            Jump to
+          </p>
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3 reveal">
+            {QUICK_LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="bg-butter text-green-deep rounded-2xl px-4 py-3.5 text-sm font-bold text-center border border-green-mid shadow-[0_14px_30px_-18px_rgba(1,38,34,0.7)] hover:bg-butter-deep transition-colors"
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* KEY METRICS — dedicated full-width section, same grid language as Deep-Dive/Insights */}
+        <section className="pb-14">
+          <SectionEyebrow>By The Numbers</SectionEyebrow>
+          <h2 className="font-display text-2xl sm:text-3xl font-black text-butter mb-8 reveal">
+            The headline metrics
+          </h2>
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+            {KEY_METRICS.map((m) => (
+              <div
+                key={m.label}
+                className="bg-butter text-green-deep rounded-2xl p-5 reveal flex flex-col justify-between min-h-33 border border-green-mid shadow-[0_14px_30px_-18px_rgba(1,38,34,0.7)]"
+              >
+                <p className="text-xs sm:text-sm text-green-deep/75 font-medium leading-snug">{m.label}</p>
+                <div>
+                  <p className="font-mono font-black text-2xl sm:text-3xl text-green-bright leading-none mb-1">{m.value}</p>
+                  <p className="text-[11px] sm:text-xs text-green-deep/55 font-mono">{m.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* BUSINESS QUESTION */}
+        <section id="problem" className="py-10">
+          <SectionEyebrow>The Business Question</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            Repeat purchases were up. Margin was down. Why?
+          </h2>
+          <p className="text-butter/85 max-w-2xl mb-8 reveal leading-relaxed">
+            GlowNest's repeat purchase rate was climbing — the kind of number
+            that usually gets celebrated. But margin was declining at the
+            same time, and nobody could say why with any precision.
+          </p>
+          <div className="bg-butter border border-green-deep/10 rounded-2xl p-6 sm:p-7 reveal">
+            <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
+              {PROBLEM_POINTS.map((p) => (
+                <li key={p} className="flex gap-3 text-sm text-green-mid leading-relaxed">
+                  <span className="text-gold font-black shrink-0">—</span>
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ROLE & APPROACH */}
+        <section id="approach" className="py-10">
+          <SectionEyebrow>My Role &amp; Approach</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            What I actually did
+          </h2>
+          <p className="text-butter/85 max-w-2xl mb-8 reveal leading-relaxed">
+            I built the synthetic dataset representing GlowNest's customer
+            base and ran the full LTV and channel-profitability analysis
+            end-to-end, from raw data to a decision-ready dashboard.
+          </p>
+          <div className="bg-butter border border-green-deep/10 rounded-2xl p-6 sm:p-7 reveal">
+            <ol className="flex flex-col gap-3">
+              {APPROACH_POINTS.map((p, i) => (
+                <li key={p} className="flex gap-4 text-sm text-green-mid leading-relaxed">
+                  <span className="font-mono font-black text-green-bright shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                  {p}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* DEEP DIVE QUADRANT */}
+        <section id="deep-dive" className="py-14">
+          <SectionEyebrow>Detailed Analysis</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            Deep-dive by theme
+          </h2>
+          <p className="text-butter/85 max-w-xl mb-9 reveal">
+            Four lenses on the same 10,000 customers — channel value, churn
+            behavior, discount cost, and segment quality.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            {DEEP_DIVE.map((card) => (
+              <div
+                key={card.title}
+                className="relative bg-butter border border-green-deep/10 rounded-2xl p-6 pl-8 reveal"
+              >
+                <span className={`absolute left-0 top-6 bottom-6 w-1.5 rounded-full ${card.tint}`} />
+                <h3 className="font-display font-bold text-xl text-green-deep mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-sm text-green-mid leading-relaxed">{card.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* POWER BI DASHBOARD */}
+        <section id="dashboard" className="py-14">
+          <SectionEyebrow>The Deliverable</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            Power BI dashboard
+          </h2>
+          <p className="text-butter/85 max-w-xl mb-9 reveal">
+            A 5-page report analyzing LTV, retention, channel performance and
+            segment mix across all five acquisition channels.
+          </p>
+
+          <div className="reveal mb-10 max-w-2xl">
+            <p className="font-display font-bold text-butter mb-2">Full dashboard overview</p>
+            {/* Save the uploaded dashboard screenshot to /public/images/glownest-dashboard.png
+                and swap the placeholder below for:
+                <ImageBox><img src="/images/glownest-dashboard.png" alt="GlowNest Power BI dashboard" className="w-full h-full object-cover object-top" /></ImageBox> */}
+            <ImgPlaceholder
+              icon="🖥️"
+              label="Full dashboard — Overview, LTV by channel, Retention, Channel performance & Segment mix"
+            />
+            <p className="text-xs text-butter/80 mt-2 leading-relaxed">
+              All 5 pages in one view — channel LTV, retention curves, channel cost breakdown, and segment mix.
+            </p>
+          </div>
+
+          <p className="font-display font-bold text-butter mb-4 reveal">Page by page</p>
+          <div className="grid sm:grid-cols-2 gap-6">
+            {DASHBOARD_FIGURES.map((fig) => (
+              <div key={fig.label} className="reveal bg-butter border border-green-deep/10 rounded-2xl p-4 sm:p-5">
+                <h4 className="font-display font-bold text-green-deep mb-0.5">{fig.label}</h4>
+                <p className="font-mono text-[11px] text-green-mid/70 mb-3">{fig.caption}</p>
+                <ImgPlaceholder label={fig.label} />
+                <p className="text-sm text-green-mid leading-relaxed mt-3">{fig.explain}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* A/B TEST */}
+        <section id="ab-test" className="py-14">
+          <SectionEyebrow>Experimentation</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            A/B test
+          </h2>
+          <div className="reveal bg-butter border border-green-deep/10 rounded-2xl p-6 sm:p-7">
+            <span className="inline-block px-3 py-1 rounded-full bg-gold text-green-deep text-xs font-mono font-bold mb-4">
+              {AB_TEST.status}
+            </span>
+            <p className="text-green-mid leading-relaxed mb-6 max-w-2xl">
+              This LTV analysis is descriptive, not experimental — it tells
+              you <em>what</em> is happening by channel, not what happens if
+              you change something. The natural next step is to test the
+              biggest recommendation directly:
+            </p>
+            <div className="bg-butter-deep rounded-xl p-5 mb-6">
+              <p className="font-mono text-[11px] uppercase tracking-wide text-gold font-bold mb-1">Hypothesis</p>
+              <p className="text-sm text-green-mid leading-relaxed">{AB_TEST.hypothesis}</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4 mb-2">
+              <div className="bg-butter-deep text-green-deep rounded-xl p-5">
+                <p className="font-mono text-xs uppercase tracking-wide text-green-deep/60 font-bold mb-1">{AB_TEST.control.label}</p>
+                <p className="text-sm mb-3">{AB_TEST.control.desc}</p>
+                <p className="text-xs text-green-deep/60">{AB_TEST.control.metric}</p>
+                <p className="font-mono font-black text-2xl text-green-bright">{AB_TEST.control.value}</p>
+              </div>
+              <div className="bg-butter-deep text-green-deep rounded-xl p-5">
+                <p className="font-mono text-xs uppercase tracking-wide text-green-deep/60 font-bold mb-1">{AB_TEST.variant.label}</p>
+                <p className="text-sm mb-3">{AB_TEST.variant.desc}</p>
+                <p className="text-xs text-green-deep/60">{AB_TEST.variant.metric}</p>
+                <p className="font-mono font-black text-2xl text-green-bright">{AB_TEST.variant.value}</p>
+              </div>
+            </div>
+            <p className="text-xs font-mono text-green-mid/70">
+              Values show as "—" until the test is run — see the analyst's note below on how to generate real results.
+            </p>
+          </div>
+        </section>
+
+        {/* PROJECT LINKS */}
+        <section id="projects" className="py-14">
+          <SectionEyebrow>Project Sources</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            See the work
+          </h2>
+          <p className="text-butter/85 max-w-xl mb-9 reveal">
+            Everything behind this page — code, dashboard, dataset and report.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {PROJECT_LINKS.map((p) => (
+              <a
+                key={p.label}
+                href={p.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="reveal bg-butter border border-green-deep/10 rounded-2xl p-6 flex items-start gap-4 hover:bg-butter hover:text-green-deep transition-colors group"
+              >
+                <span className="text-2xl shrink-0">{p.icon}</span>
+                <div>
+                  <p className="font-display font-bold text-green-deep">{p.label}</p>
+                  <p className="text-sm text-green-mid">{p.desc}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* INSIGHTS */}
+        <section id="insights" className="py-14">
+          <SectionEyebrow>Key Insights &amp; Findings</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            What the data showed
+          </h2>
+          <p className="text-butter/85 max-w-xl mb-9 reveal">
+            Five findings that tie acquisition channel directly to
+            profitability.
+          </p>
+
+          <div className="flex flex-col gap-4">
+            {INSIGHTS.map((item) => (
+              <div
+                key={item.title}
+                className="relative bg-butter border-l-4 border-green-deep rounded-r-2xl rounded-l-md pl-6 pr-6 py-5 reveal"
+              >
+                <p className="font-mono text-xs uppercase tracking-wide text-gold mb-1.5 font-bold">
+                  → {item.tag}
+                </p>
+                <h4 className="font-display font-bold text-lg text-green-deep mb-1.5">
+                  {item.title}
+                </h4>
+                <p className="text-sm text-green-mid leading-relaxed">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* IMPACT + QUOTE */}
+        <section id="impact" className="py-14">
+          <SectionEyebrow>Impact</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-8 reveal">
+            Why this mattered
+          </h2>
+
+          <div className="grid lg:grid-cols-5 gap-5">
+            <div className="lg:col-span-3 bg-butter border border-green-deep/10 rounded-2xl p-6 sm:p-7 reveal">
+              <ul className="flex flex-col gap-3">
+                {IMPACT_POINTS.map((p) => (
+                  <li key={p} className="flex gap-3 text-sm text-green-mid leading-relaxed">
+                    <span className="text-gold font-black shrink-0">—</span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="lg:col-span-2 bg-butter text-green-deep rounded-2xl p-6 sm:p-7 reveal flex items-center">
+              <p className="font-display italic text-lg sm:text-xl leading-snug">
+                "This project changed how I read a revenue number — you stop
+                asking how much did we make, and start asking from whom, and
+                will they stay."
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* RECOMMENDATIONS */}
+        <section id="recommendations" className="py-14">
+          <SectionEyebrow>Recommendations &amp; Business Impact</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl font-black text-butter mb-3 reveal">
+            Where to act next
+          </h2>
+          <p className="text-butter/85 max-w-xl mb-9 reveal">
+            Practical and prioritized — from this quarter's budget shift to
+            the retention program worth building next.
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-5">
+            {RECOMMENDATIONS.map((r) => (
+              <div
+                key={r.title}
+                className="bg-butter border border-green-deep/10 rounded-2xl p-6 reveal"
+              >
+                <span className="inline-block px-3 py-1 rounded-full bg-butter text-green-deep text-xs font-mono font-bold mb-4">
+                  {r.tag}
+                </span>
+                <h3 className="font-display font-bold text-lg text-green-deep mb-2">
+                  {r.title}
+                </h3>
+                <p className="text-sm text-green-mid leading-relaxed">{r.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ABOUT THE ANALYST */}
+        <section id="about" className="py-14">
+          <div className="bg-butter border border-green-deep/10 rounded-3xl p-6 sm:p-8 md:p-10 reveal">
+            <SectionEyebrow boxed>About the Analyst</SectionEyebrow>
+            <div className="grid md:grid-cols-5 gap-8 items-center">
+              <div className="md:col-span-3">
+                <div className="flex flex-col sm:flex-row gap-6 sm:items-center mb-6">
+                  {/* Swap for a real photo: <img src="/images/profile.jpg" className="w-20 h-20 rounded-full object-cover" /> */}
+                  <div className="w-20 h-20 rounded-full bg-green-deep/10 border-2 border-dashed border-green-mid/50 flex items-center justify-center text-green-mid font-mono text-xs text-center shrink-0">
+                    photo
+                  </div>
+                  <div>
+                    <h3 className="font-display text-2xl font-black text-green-deep">
+                      Kritika
+                    </h3>
+                    <p className="text-green-mid text-sm font-mono font-bold">Data Analyst</p>
+                  </div>
+                </div>
+                <p className="text-green-mid leading-relaxed mb-7">
+                  I came to data analytics from a full-stack (MERN) and
+                  electronics engineering background — which is why this
+                  project isn't just a Power BI dashboard, it's also a
+                  hand-built React case-study page around it. I like problems
+                  where a messy pile of numbers turns into one decision
+                  someone can actually act on.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {["GitHub", "LinkedIn", "Portfolio", "Email"].map((l) => (
+                    <a
+                      key={l}
+                      href="#"
+                      className="px-4 py-2 rounded-full border border-green-deep text-green-deep text-sm font-bold hover:bg-butter hover:text-green-deep transition-colors"
+                    >
+                      {l}
+                    </a>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-2 flex justify-center">
+                <TerminalStack />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="relative z-10 bg-butter py-8 mt-6">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <p className="font-mono text-xs text-green-deep/70">
+            GlowNest (fictional brand) · Synthetic dataset, 10,000 customers ·
+            Power BI · Customer Profitability &amp; LTV Analysis
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+ <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
+        {/* HERO / EXECUTIVE SUMMARY */}
+        <section id="summary" className="pt-12 sm:pt-14 pb-10">
+          <div className="bg-butter border border-green-deep/10 rounded-3xl p-6 sm:p-9 reveal shadow-[0_20px_60px_-30px_rgba(1,62,55,0.35)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <SectionEyebrow boxed>Executive Summary</SectionEyebrow>
+              <Pill>10,000 synthetic customers · 5 channels</Pill>
+            </div>
+
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-green-deep leading-[1.05] mb-4">
+              Not all growth is profitable growth.
+            </h1>
+
+            <p className="text-green-mid leading-relaxed mb-2 max-w-2xl font-medium">
+              GlowNest is a fictional D2C skincare brand built for this case
+              study. It was acquiring customers across five channels without
+              knowing which ones were actually profitable — rising repeat
+              purchase rates were masking margin loss from heavy discounting.
+              This project analyzes 10,000{" "}
+              <span className="font-bold text-green-deep">synthetically generated</span>{" "}
+              customer records to find which channels create real profit,
+              where churn kills LTV, and what to do about both.
+            </p>
+            <p className="text-xs font-mono text-green-mid/70 mb-7">
+              All data in this project — customers, orders, revenue, CAC — is synthetic. No real company or customer data is used.
+            </p>
+
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-1 sm:gap-2 border-b border-green-deep/10 mb-6">
+              {TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3 sm:px-4 py-2.5 text-sm font-bold rounded-t-lg transition-colors ${
+                    activeTab === tab
+                      ? "text-green-deep border-b-2 border-gold"
+                      : "text-green-mid/70 hover:text-green-deep"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "Objective" && (
+              <p className="text-green-mid leading-relaxed">
+                Identify which of the five acquisition channels are genuinely
+                profitable once CAC and discounting are netted out of
+                revenue — then turn that into a concrete marketing budget
+                reallocation GlowNest could act on.
+              </p>
+            )}
+
+            {activeTab === "My Analysis" && (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {ANALYSIS_DONE.map((a) => (
+                  <div key={a.title} className="flex gap-3">
+                    <span className="text-gold font-black shrink-0">—</span>
+                    <div>
+                      <p className="font-display font-bold text-green-deep text-sm mb-0.5">{a.title}</p>
+                      <p className="text-sm text-green-mid leading-relaxed">{a.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "Methodology" && (
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                {METHOD_STEPS.map((s) => (
+                  <div key={s.num} className="bg-butter rounded-xl p-4 border border-green-deep/10">
+                    <span className="font-mono text-green-bright font-bold text-lg block mb-1">
+                      {s.num}
+                    </span>
+                    <p className="font-display font-bold text-green-deep text-sm mb-1">
+                      {s.title}
+                    </p>
+                    <p className="text-xs text-green-mid leading-snug">{s.body}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "Key Result" && (
+              <div className="ltv-tab">
+                <p className="font-display italic text-4xl sm:text-5xl font-black text-green-deep mb-1">
+                  5.6×
+                </p>
+                <p className="font-mono text-xs text-green-mid mb-5 font-bold">
+                  higher lifetime value — organic vs. coupon site
+                </p>
+                <div className="mb-4">
+                  <div className="flex justify-between font-mono text-xs text-green-deep mb-1.5 font-bold">
+                    <span>Organic</span>
+                    <span>₹4,187</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-green-deep/10 overflow-hidden">
+                    <div className="bar-fill bar-fill--organic" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between font-mono text-xs text-green-deep mb-1.5 font-bold">
+                    <span>Coupon site</span>
+                    <span>₹741</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-green-deep/10 overflow-hidden">
+                    <div className="bar-fill bar-fill--low bar-fill--coupon" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section> 

@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* Inter (display + body — clean, modern, wide weight range) and
+   JetBrains Mono (data/mono figures). Loaded the same way the rest of
+   this Tailwind v4 CSS-first setup pulls fonts — via @import — since
+   there's no static index.html <head> in this project to drop the
+   <link> tags into. If you do have an index.html, you can instead put
+   this there:
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> */
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"); */
+
+/* =========================================================
+   DESIGN TOKENS — Tailwind v4 CSS-first theme
+   Butter background, deep green for nav/buttons/accents, gold as the
+   single "results" accent. No gradients, per brief. Tokens live inside
+   @theme so Tailwind generates real utilities (bg-green-deep, etc.)
+   instead of relying on plain CSS variables.
+   ========================================================= */
+:root {
+  --color-butter: #ffefb3;
+  --color-butter-soft: #fff6da;
+  --color-butter-deep: #ffe388;
+
+  --color-green-deep: #013e37;
+  --color-green-mid: #0b5c4f;
+  --color-green-bright: #12836f;
+  --color-sage: #6a9c8c;
+
+  --color-gold: #c9932c;
+  --color-gold-bright: #e3ab3d;
+  --color-cream: #fff8e6;
+  --color-ink: #062622;
+
+  --font-display: "Inter", "Segoe UI", sans-serif;
+  --font-body: "Inter", "-apple-system", "BlinkMacSystemFont", sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
+
+  --breakpoint-xs: 26.25rem; /* 420px — extra step below Tailwind's default sm (640px) */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-green-deep);
+  color: var(--color-butter);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bold is the default register for this page — headings should never
+   read as regular-weight system-font text. */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Scroll-reveal utility (toggled via IntersectionObserver in App.jsx) */
+@layer utilities {
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.7s cubic-bezier(0.2, 0.65, 0.3, 1),
+      transform 0.7s cubic-bezier(0.2, 0.65, 0.3, 1);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .blob {
+    animation: none !important;
+  }
+}
+
+/* Ambient background glow — solid, blurred circles (not gradients) */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  animation: drift 24s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, 24px) scale(1.06); }
+  66% { transform: translate(-24px, 12px) scale(0.96); }
+}
+
+/* Animated LTV comparison bars */
+.bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  width: 0%;
+  background-color: var(--color-green-bright);
+  transition: width 1.3s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+.bar-fill--low { background-color: var(--color-gold); }
+.ltv-tab.is-visible .bar-fill--organic { width: 100%; }
+.ltv-tab.is-visible .bar-fill--coupon { width: 17.7%; } /* 741 / 4187 */
+
+/* -----------------------------------------------------------
+   Signature element: a terminal / editor-styled panel used in
+   the "About the Analyst" section to signal the full-stack (MERN)
+   background behind the analytics work — three window dots, a
+   monospace "stack.json", and a blinking cursor.
+------------------------------------------------------------ */
+.terminal {
+  background-color: var(--color-ink);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -28px rgba(1, 38, 34, 0.55);
+}
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.9rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.terminal-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+}
+.terminal pre {
+  margin: 0;
+  padding: 1.1rem 1.25rem 1.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: #d7f2ea;
+  overflow-x: auto;
+}
+.terminal .tok-key { color: #7dd9c4; }
+.terminal .tok-str { color: var(--color-gold-bright); }
+.terminal .tok-punc { color: #6f9e93; }
+.terminal .cursor {
+  display: inline-block;
+  width: 0.5em;
+  background: #7dd9c4;
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
