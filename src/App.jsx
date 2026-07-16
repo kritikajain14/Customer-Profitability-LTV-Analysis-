@@ -279,7 +279,7 @@ function TerminalStack() {
         <span className="terminal-dot" style={{ background: "#28c840" }} />
         <span className="ml-2 font-mono text-[11px] text-white/40">stack.json</span>
       </div>
-      <pre>
+      <pre className="overflow-x-auto whitespace-pre-wrap wrap-break-word text-[11px] sm:text-xs leading-relaxed">
         <span className="tok-punc">{"{"}</span>{"\n"}
         {TECH_STACK.map((row, i) => (
           <React.Fragment key={row.key}>
@@ -348,6 +348,7 @@ export default function App() {
   useReveal();
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [lightboxImg, setLightboxImg] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
@@ -360,30 +361,70 @@ export default function App() {
 
       {/* NAV — solid butter, high contrast against the green page */}
       <nav className="sticky top-0 z-50 bg-butter border-b border-black/10 shadow-[0_8px_24px_-16px_rgba(1,38,34,0.6)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 shrink-0 rounded-full bg-gold flex items-center justify-center text-green-deep font-display font-black text-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full bg-gold flex items-center justify-center text-green-deep font-display font-black text-xs sm:text-sm">
               GN
             </div>
             <div className="min-w-0">
-              <p className="font-display font-bold text-green-deep leading-tight text-sm sm:text-base truncate">
+              <p className="font-display font-bold text-green-deep leading-tight text-xs sm:text-base truncate">
                 GlowNest · D2C LTV Analysis
               </p>
-              <p className="hidden sm:block text-xs text-green-deep/60 font-mono">
+              <p className="hidden md:block text-xs text-green-deep/60 font-mono">
                 Customer Profitability &amp; LTV Analysis
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+
+          {/* Desktop actions */}
+          <div className="hidden sm:flex items-center gap-3 shrink-0">
             <a
               href="#dashboard"
-              className="px-3 sm:px-4 py-2 rounded-full bg-gold text-green-deep text-xs sm:text-sm font-bold hover:bg-gold-bright transition-colors"
+              className="px-4 py-2 rounded-full bg-gold text-green-deep text-sm font-bold hover:bg-gold-bright transition-colors"
             >
               Dashboard
             </a>
             <a
               href="#recommendations"
-              className="hidden sm:inline-block px-4 py-2 rounded-full border border-green-deep/40 text-green-deep text-sm font-bold hover:bg-green-deep hover:text-butter transition-colors"
+              className="px-4 py-2 rounded-full border border-green-deep/40 text-green-deep text-sm font-bold hover:bg-green-deep hover:text-butter transition-colors"
+            >
+              Recommendations
+            </a>
+          </div>
+
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            onClick={() => setNavOpen((v) => !v)}
+            aria-label={navOpen ? "Close menu" : "Open menu"}
+            aria-expanded={navOpen}
+            className="sm:hidden shrink-0 w-9 h-9 rounded-full border border-green-deep/30 flex items-center justify-center text-green-deep"
+          >
+            <span className="relative w-4 h-3 block">
+              <span className={`absolute left-0 right-0 h-0.5 bg-green-deep rounded transition-all duration-200 ${navOpen ? "top-1/2 -translate-y-1/2 rotate-45" : "top-0"}`} />
+              <span className={`absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-green-deep rounded transition-opacity duration-200 ${navOpen ? "opacity-0" : "opacity-100"}`} />
+              <span className={`absolute left-0 right-0 h-0.5 bg-green-deep rounded transition-all duration-200 ${navOpen ? "top-1/2 -translate-y-1/2 -rotate-45" : "bottom-0"}`} />
+            </span>
+          </button>
+        </div>
+
+        {/* Mobile dropdown */}
+        <div
+          className={`sm:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out ${navOpen ? "max-h-60" : "max-h-0"
+            }`}
+        >
+          <div className="px-4 pb-4 pt-1 flex flex-col gap-2 border-t border-black/10">
+            <a
+              href="#dashboard"
+              onClick={() => setNavOpen(false)}
+              className="w-full text-center px-4 py-2.5 rounded-full bg-gold text-green-deep text-sm font-bold hover:bg-gold-bright transition-colors"
+            >
+              Dashboard
+            </a>
+            <a
+              href="#recommendations"
+              onClick={() => setNavOpen(false)}
+              className="w-full text-center px-4 py-2.5 rounded-full border border-green-deep/40 text-green-deep text-sm font-bold hover:bg-green-deep hover:text-butter transition-colors"
             >
               Recommendations
             </a>
@@ -393,20 +434,20 @@ export default function App() {
 
       <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
         {/* HERO / EXECUTIVE SUMMARY */}
-        <section id="summary" className="pt-12 sm:pt-14 pb-10">
-          <div className="bg-[#FFF6D6] border border-[#FFF6D6] rounded-3xl p-6 sm:p-9 reveal shadow-lg">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <section id="summary" className="pt-8 sm:pt-12 md:pt-14 pb-8 sm:pb-10">
+          <div className="bg-[#FFF6D6] border border-[#FFF6D6] rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-9 reveal shadow-lg">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
               <SectionEyebrow boxed classname="text-green-900">
                 Executive Summary
               </SectionEyebrow>
               <Pill classname="text-green-900">10,000 synthetic customers · 5 channels</Pill>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#123524] leading-[1.05] mb-4">
+            <h1 className="font-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-[#123524] leading-[1.1] sm:leading-[1.05] mb-3 sm:mb-4">
               Not all growth is profitable growth.
             </h1>
 
-            <p className="text-[#2E5A43] leading-relaxed mb-2 max-w-2xl font-medium">
+            <p className="text-sm sm:text-base text-[#2E5A43] leading-relaxed mb-2 max-w-2xl font-medium">
               GlowNest is a fictional D2C skincare brand built for this case study.
               It was acquiring customers across five channels without knowing which
               ones were actually profitable — rising repeat purchase rates were
@@ -419,18 +460,18 @@ export default function App() {
               kills LTV, and what to do about both.
             </p>
 
-            <p className="text-xs font-mono text-[#52796F] mb-7">
+            <p className="text-[11px] sm:text-xs font-mono text-[#52796F] mb-6 sm:mb-7">
               All data in this project — customers, orders, revenue, CAC — is
               synthetic. No real company or customer data is used.
             </p>
 
-            {/* Tabs */}
-            <div className="flex flex-wrap gap-1 sm:gap-2 border-b border-[#E8DFC1] mb-6">
+            {/* Tabs — horizontally scrollable on narrow screens so labels never wrap/clip */}
+            <div className="flex gap-1 sm:gap-2 border-b border-[#E8DFC1] mb-5 sm:mb-6 overflow-x-auto no-scrollbar -mx-1 px-1">
               {TABS.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-3 sm:px-4 py-2.5 text-sm font-bold rounded-t-lg transition-colors ${activeTab === tab
+                  className={`shrink-0 px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab
                     ? "text-[#123524] border-b-2 border-[#C89F3D]"
                     : "text-[#52796F] hover:text-[#123524]"
                     }`}
@@ -441,7 +482,7 @@ export default function App() {
             </div>
 
             {activeTab === "Objective" && (
-              <p className="text-[#2E5A43] leading-relaxed">
+              <p className="text-sm sm:text-base text-[#2E5A43] leading-relaxed">
                 Identify which of the five acquisition channels are genuinely
                 profitable once CAC and discounting are netted out of revenue — then
                 turn that into a concrete marketing budget reallocation GlowNest could
@@ -470,7 +511,7 @@ export default function App() {
             )}
 
             {activeTab === "Methodology" && (
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-5 gap-3">
                 {METHOD_STEPS.map((s) => (
                   <div
                     key={s.num}
@@ -494,7 +535,7 @@ export default function App() {
 
             {activeTab === "Key Result" && (
               <div className="ltv-tab">
-                <p className="font-display italic text-4xl sm:text-5xl font-black text-[#123524] mb-1">
+                <p className="font-display italic text-3xl sm:text-4xl md:text-5xl font-black text-[#123524] mb-1">
                   5.6×
                 </p>
 
@@ -536,12 +577,12 @@ export default function App() {
             Jump to
           </p>
 
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3 reveal">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 reveal">
             {QUICK_LINKS.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
-                className="bg-[#FFF6D6] text-[#123524] rounded-2xl px-4 py-3.5 text-sm font-bold text-center border border-[#E8DFC1] shadow-lg hover:bg-[#FFFBEF] transition-all duration-300"
+                className="bg-[#FFF6D6] text-[#123524] rounded-2xl px-3 sm:px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-center border border-[#E8DFC1] shadow-lg hover:bg-[#FFFBEF] transition-all duration-300"
               >
                 {l.label}
               </a>
@@ -974,41 +1015,41 @@ export default function App() {
 
         {/* ABOUT THE ANALYST */}
         <section id="about" className="py-14">
-          <div className="bg-butter border border-green-deep/10 rounded-3xl p-6 sm:p-8 md:p-10 reveal">
+          <div className="bg-butter border border-green-deep/10 rounded-3xl p-5 sm:p-8 md:p-10 reveal overflow-hidden">
             <SectionEyebrow boxed>About the Analyst</SectionEyebrow>
-            <div className="grid md:grid-cols-5 gap-8 items-center">
-              <div className="md:col-span-3">
-                <div className="flex flex-col sm:flex-row gap-6 sm:items-center mb-6">
+            <div className="grid md:grid-cols-5 gap-6 sm:gap-8 items-center">
+              <div className="md:col-span-3 min-w-0">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center mb-5 sm:mb-6">
                   {/* Swap for a real photo: <img src="/images/profile.jpg" className="w-20 h-20 rounded-full object-cover" /> */}
 
                   <div>
-                    <h3 className="font-display text-2xl font-black text-green-deep">
+                    <h3 className="font-display text-xl sm:text-2xl font-black text-green-deep">
                       Kritika Jain
                     </h3>
                     <p className="text-green-mid text-sm font-mono font-bold">Data Analyst</p>
                   </div>
                 </div>
-                <p className="text-green-mid leading-relaxed mb-7">
+                <p className="text-sm sm:text-base text-green-mid leading-relaxed mb-6 sm:mb-7">
                   I'm a data analyst focused on translating raw data into clear, actionable decisions. 
                   My strength lies in identifying the insight that matters most - 
                   the one that moves a business forward ,  
                   rather than simply presenting numbers.
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   {SOCIAL_LINKS.map((l) => (
                     <a
                       key={l.label}
                       href={l.href}
                       target={l.label !== "Email" ? "_blank" : undefined}
                       rel={l.label !== "Email" ? "noopener noreferrer" : undefined}
-                      className="px-4 py-2 rounded-full border border-green-deep text-green-deep text-sm font-bold hover:bg-green-deep hover:text-butter transition-colors"
+                      className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-green-deep text-green-deep text-xs sm:text-sm font-bold hover:bg-green-deep hover:text-butter transition-colors whitespace-nowrap"
                     >
                       {l.label}
                     </a>
                   ))}
                 </div>
               </div>
-              <div className="md:col-span-2 flex justify-center">
+              <div className="md:col-span-2 flex justify-center min-w-0 w-full">
                 <TerminalStack />
               </div>
             </div>
