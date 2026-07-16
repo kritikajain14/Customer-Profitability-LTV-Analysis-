@@ -989,12 +989,10 @@ export default function App() {
                   </div>
                 </div>
                 <p className="text-green-mid leading-relaxed mb-7">
-                  I came to data analytics from a full-stack (MERN) and
-                  electronics engineering background — which is why this
-                  project isn't just a Power BI dashboard, it's also a
-                  hand-built React case-study page around it. I like problems
-                  where a messy pile of numbers turns into one decision
-                  someone can actually act on.
+                  I'm a data analyst focused on translating raw data into clear, actionable decisions. 
+                  My strength lies in identifying the insight that matters most - 
+                  the one that moves a business forward ,  
+                  rather than simply presenting numbers.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {SOCIAL_LINKS.map((l) => (
